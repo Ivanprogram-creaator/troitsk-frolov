@@ -1,29 +1,38 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QPixmap, QPen, QColor
-from PyQt5.QtCore import Qt
-from ui import Ui_MainWindow
+import sqlite3
+from PyQt5 import uic
 from random import randint
 import sys
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
-        self.pushButton.clicked.connect(self.circle)
-        self.label.setPixmap(QPixmap(600, 600))
-
-    def circle(self):
-        x, y = randint(30, 671), randint(70, 400)
-        w, h = randint(0, 100), randint(0, 100)
-        painter = QPainter(self.label.pixmap())
-        pen = QPen()
-        pen.setWidth(3)
-        pen.setColor(QColor(randint(0, 255), randint(0, 255), randint(0, 255)))
-        painter.setPen(pen)
-        painter.drawEllipse(x, y, w, h)
-        painter.end()
-        self.update()
+        uic.loadUi('main.ui', self)
+        self.tableWidget.setColumnCount(7)
+        self.tableWidget.setHorizontalHeaderLabels(
+            ['ID', 'название сорта', 'степень обжарки', 'молотый/в зернах', 'описание вкуса', 'цена', 'объем упаковки'])
+        self.tableWidget.setColumnWidth(0, 15)
+        self.tableWidget.setColumnWidth(1, 100)
+        self.tableWidget.setColumnWidth(2, 150)
+        self.tableWidget.setColumnWidth(3, 150)
+        self.tableWidget.setColumnWidth(4, 100)
+        self.tableWidget.setColumnWidth(5, 50)
+        self.tableWidget.setColumnWidth(6, 100)
+        connect = sqlite3.connect('coffee.sqlite')
+        curser = connect.cursor()
+        res = curser.execute("""SELECT * FROM info""").fetchall()
+        self.tableWidget.setRowCount(len(res))
+        for i in range(len(res)):
+            coffee = list(res[i])
+            if coffee[3] == 0:
+                coffee[3] = 'молотый'
+            else:
+                coffee[3] = 'в зернах'
+            for j in range(7):
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(coffee[j])))
+        connect.close()
 
 
 if __name__ == '__main__':
